@@ -1,6 +1,5 @@
 #include "pipe_networking.h"
 
-
 /*=========================
   server_handshake
   args: int * to_client
@@ -12,14 +11,14 @@
   =========================*/
 int server_handshake(int *to_client) {
   //Creating well known pipe
-  char private[10];
+  char private[20];
   mkfifo("WKP",0644);
 
   int public = open("WKP", O_RDONLY);
   printf("public pipe opened by server\n");
 
-  read(public,private,4);//the message sent by client
-
+  read(public,private,sizeof(private));//the message sent by client
+  remove("WKP");
   printf("message received from client was: %s\n",private);
 
   int p = open(private,O_WRONLY);
@@ -28,7 +27,8 @@ int server_handshake(int *to_client) {
   printf("Writting HOLA to client...\n");
 
   *to_client = p;
-  printf("Handshake complete (server)\n");
+  printf("Handshake complete (server)\n\n");
+  
   return public;
 }
 
@@ -44,7 +44,7 @@ int server_handshake(int *to_client) {
   =========================*/
 int client_handshake(int *to_server) {
 
-  char received[10];
+  char received[20];
 
   //Create Private Pipe
   mkfifo("P_P",0644);
@@ -60,13 +60,14 @@ int client_handshake(int *to_server) {
   int private = open("P_P",O_RDONLY);
   printf("client opened private pipe\n");
 
-  read(private,received,10);
-
+  read(private,received,sizeof(received));
+  remove("P_P");
   printf("Messaged Received From Server is: %s\n",received);
 
   //Setting to_server
   *to_server = public;
   printf("Handshake complete (client)\n");
+
   return private;
 }
 
